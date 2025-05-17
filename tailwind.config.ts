@@ -91,9 +91,9 @@ export default defineConfig({
           "100%": { opacity: "0" },
         },
         "explosion": {
-          "0%": { transform: "translate(-50%, -50%) scale(1)", opacity: "1" },
-          "50%": { transform: "translate(-50%, -50%) scale(1.5)", opacity: "0.7" },
-          "100%": { transform: "translate(-50%, -50%) scale(2)", opacity: "0" },
+          "0%": { transform: "scale(1)", opacity: "1" },
+          "50%": { transform: "scale(1.5)", opacity: "0.7" },
+          "100%": { transform: "scale(2)", opacity: "0" },
         },
       },
       animation: {
@@ -101,6 +101,7 @@ export default defineConfig({
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
         "fade-out": "fade-out 0.3s ease-out",
+        "explosion": "explosion 0.5s forwards",
       },
       backgroundImage: {
         'grid-pattern': 'linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px)',

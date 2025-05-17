@@ -1,62 +1,93 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useGameContext } from './GameContext';
 
-type EnemyProps = {
-  enemy: {
-    id: string;
-    position: { x: number; y: number };
-    health: number;
-    type: 'static' | 'moving';
-  };
-};
+interface EnemyProps {
+  id: string;
+  x: number;
+  y: number;
+  health: number;
+  type: 'static' | 'moving';
+  bullets: Array<{id: string, x: number, y: number, angle: number}>;
+}
 
-const Enemy: React.FC<EnemyProps> = ({ enemy }) => {
-  // Если здоровье врага 0, показываем анимацию уничтожения
-  if (enemy.health <= 0) {
+const Enemy: React.FC<EnemyProps> = ({ id, x, y, health, type, bullets }) => {
+  const { hitEnemy } = useGameContext();
+  const enemyRef = useRef<HTMLDivElement>(null);
+  const [isHit, setIsHit] = useState(false);
+  const [isDestroyed, setIsDestroyed] = useState(false);
+  
+  // Проверка столкновения пуль с врагом
+  useEffect(() => {
+    if (!enemyRef.current) return;
+    
+    const enemyRect = {
+      x: x - 2, // 2% - половина ширины врага
+      y: y - 2, // 2% - половина высоты врага
+      width: 4,  // 4% от ширины поля
+      height: 4  // 4% от высоты поля
+    };
+    
+    for (const bullet of bullets) {
+      // Проверяем, находится ли пуля внутри врага
+      if (
+        bullet.x >= enemyRect.x &&
+        bullet.x <= enemyRect.x + enemyRect.width &&
+        bullet.y >= enemyRect.y &&
+        bullet.y <= enemyRect.y + enemyRect.height
+      ) {
+        // Пуля попала во врага
+        hitEnemy(id);
+        setIsHit(true);
+        
+        setTimeout(() => setIsHit(false), 200);
+        break;
+      }
+    }
+  }, [bullets, id, x, y, hitEnemy]);
+  
+  // Если здоровье врага равно 0, показываем анимацию уничтожения
+  useEffect(() => {
+    if (health <= 0 && !isDestroyed) {
+      setIsDestroyed(true);
+    }
+  }, [health, isDestroyed]);
+  
+  if (isDestroyed) {
     return (
-      <div
-        className="absolute w-8 h-8 transform -translate-x-1/2 -translate-y-1/2 animate-[explosion_0.5s_ease-out_forwards]"
-        style={{
-          left: `${enemy.position.x}%`,
-          top: `${enemy.position.y}%`,
+      <div 
+        className="absolute transform -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500 animate-explosion"
+        style={{ 
+          left: `${x}%`,
+          top: `${y}%`,
+          width: '40px',
+          height: '40px',
         }}
-      >
-        <div className="absolute inset-0 bg-orange-500 rounded-full opacity-75 animate-ping"></div>
-        <div className="absolute inset-0 bg-red-600 rounded-full animate-[fade-out_0.5s_ease-out_forwards]"></div>
-      </div>
+      />
     );
   }
-
-  // Определяем цвет врага в зависимости от его типа
-  const enemyColor = enemy.type === 'static' ? 'bg-red-600' : 'bg-orange-500';
-  const enemyBorder = enemy.type === 'static' ? 'border-red-700' : 'border-orange-600';
-
+  
   return (
-    <div
-      className="absolute w-8 h-8 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500"
-      style={{
-        left: `${enemy.position.x}%`,
-        top: `${enemy.position.y}%`,
+    <div 
+      ref={enemyRef}
+      className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300
+                ${type === 'static' ? 'bg-red-500' : 'bg-orange-500'} 
+                ${isHit ? 'scale-110 opacity-70' : ''}`}
+      style={{ 
+        left: `${x}%`,
+        top: `${y}%`,
+        width: '32px',
+        height: '32px',
+        borderRadius: type === 'static' ? '2px' : '50%',
       }}
     >
-      {/* Тело врага */}
-      <div className={`absolute inset-0 ${enemyColor} rounded-full border-2 ${enemyBorder} shadow-inner`}></div>
-      
-      {/* Индикатор здоровья */}
-      <div 
-        className="absolute w-8 h-1 bg-gray-800 -top-3 left-0 rounded-full overflow-hidden"
-      >
-        <div 
-          className="h-full bg-green-500 transition-all duration-300" 
-          style={{ width: `${enemy.health}%` }}
-        ></div>
+      {/* Полоса здоровья */}
+      <div className="absolute -top-3 left-0 w-full h-1 bg-gray-800">
+        <div
+          className="h-full bg-green-500"
+          style={{ width: `${(health / (type === 'static' ? 100 : 75)) * 100}%` }}
+        />
       </div>
-      
-      {/* Пульсация для движущихся врагов */}
-      {enemy.type === 'moving' && (
-        <div className="absolute inset-0 bg-orange-400 rounded-full opacity-30 animate-pulse"></div>
-      )}
     </div>
   );
 };

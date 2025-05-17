@@ -2,47 +2,64 @@
 import React from 'react';
 import { useGameContext } from './GameContext';
 
-const PlayerCharacter: React.FC = () => {
-  const { player, mousePosition } = useGameContext();
-  
-  // Вычисляем угол поворота игрока для направления оружия
-  const angle = Math.atan2(
-    mousePosition.y - player.position.y,
-    mousePosition.x - player.position.x
-  ) * (180 / Math.PI);
+interface PlayerCharacterProps {
+  x: number;
+  y: number;
+}
 
+const PlayerCharacter: React.FC<PlayerCharacterProps> = ({ x, y }) => {
+  const { mousePosition } = useGameContext();
+  
+  // Вычисляем угол поворота персонажа к курсору мыши
+  const dx = mousePosition.x - x;
+  const dy = mousePosition.y - y;
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+  
   return (
-    <div 
-      className="absolute w-8 h-8 transform -translate-x-1/2 -translate-y-1/2"
+    <div
+      className="absolute transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center"
       style={{
-        left: `${player.position.x}%`,
-        top: `${player.position.y}%`,
+        left: `${x}%`,
+        top: `${y}%`,
+        width: '40px',
+        height: '40px',
       }}
     >
       {/* Тело персонажа */}
-      <div className="absolute top-0 left-0 w-full h-full">
-        <div className="absolute inset-0 bg-blue-600 rounded-full border-2 border-blue-700 shadow-inner z-10"></div>
-        
-        {/* Индикатор здоровья */}
-        <div 
-          className="absolute w-8 h-1 bg-red-800 -top-3 left-0 rounded-full overflow-hidden"
-        >
-          <div 
-            className="h-full bg-red-500" 
-            style={{ width: `${player.health}%` }}
-          ></div>
-        </div>
-      </div>
-      
-      {/* Оружие */}
-      <div 
-        className="absolute top-1/2 left-1/2 h-2 w-8 bg-gray-700 rounded-sm origin-left z-20"
+      <div
+        className="absolute rounded-full bg-blue-500 border-2 border-blue-600 z-10"
         style={{
-          transform: `translate(-50%, -50%) rotate(${angle}deg)`,
+          width: '24px',
+          height: '24px',
         }}
-      >
-        <div className="absolute right-0 w-1 h-2 bg-gray-900"></div>
-      </div>
+      />
+      
+      {/* Оружие/ствол */}
+      <div
+        className="absolute bg-gray-700 rounded-sm transition-transform z-20"
+        style={{
+          width: '18px',
+          height: '6px',
+          transformOrigin: 'left center',
+          transform: `translateX(8px) rotate(${angle}deg)`,
+          left: '50%',
+          top: '50%',
+          marginTop: '-3px',
+          marginLeft: '-6px',
+        }}
+      />
+      
+      {/* Линия прицеливания (необязательно) */}
+      <div
+        className="absolute bg-gray-500 opacity-20 rounded-full"
+        style={{
+          width: '2px',
+          height: '2px',
+          transformOrigin: 'center',
+          transform: `rotate(${angle}deg)`,
+          boxShadow: '0 0 20px 20px rgba(255,255,255,0.03)',
+        }}
+      />
     </div>
   );
 };
